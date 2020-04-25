@@ -2,7 +2,7 @@ let modelObj; // setup initializes this to a p5.js 3D model
 let sensorData;
 
 function preload() {
-    modelObj = loadModel('models/bunny.obj', true);
+    modelObj = loadModel('models/camera.obj', true);
 }
 
 function setup() {

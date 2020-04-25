@@ -9,6 +9,11 @@ import {
 } from 'https://cdn.jsdelivr.net/npm/imu-tools@0.1.4/utils.js';
 
 let modelObj; // setup initializes this to a p5.js 3D model
+let img;
+let img2;
+let SWH1;
+let SWH2;
+let SWH3;
 const devices = {}; // sensor data for each device, indexed by device id
 
 const AXIS_LENGTH = 400;
@@ -21,7 +26,7 @@ const settings = {
     rx: 0,
     ry: 0,
     rz: 180,
-    model_name: 'bunny',
+    model_name: 'camera',
 };
 
 // Constants for physics simulation
@@ -31,7 +36,7 @@ const ORIGIN_SPRING_K = 0.99; // strength of spring towards origin
 const VISCOSITY = 0.99;
 
 function loadModelFromSettings() {
-    let modelName = settings.model_name || 'bunny';
+    let modelName = settings.model_name || 'camera';
     if (!modelName.match(/\.(obj|stl)$/)) {
         modelName += '.obj';
     }
@@ -58,27 +63,115 @@ if (window.dat && !isMobile) {
 
 export function preload() {
     loadModelFromSettings();
+    img = loadImage("models/dog.jpeg");
+    img2 = loadImage("models/dog2.jpeg");
 }
+
+let sensorData = {};// adjust from error report
+
+// preload(); setup(); draw(); draw(); draw(); handleSensorData(); draw(); draw();
 
 export function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
+    imuConnection.onSensorData(handleSensorData);
     createButton('Calibrate').position(0, 0).mousePressed(calibrateModels);
+
+    //let button = createButton('say hello');
+    //button.mousePressed(greet);
+
+    //button.onClick = greet;
+    
+  SWH1 = random(1, 2);
+  SWH2 = random(3, 5);
+  SWH3 = random(10, 13);
+    
+}
+
+// function greet() {
+//     alert("hello");
+// }
+
+function handleSensorData(device) {
+    sensorData = device.data;
 }
 
 export function draw() {
+    noStroke();
+  background(30,60,70);
+  
+  //stars in the universe
+  fill(250, 200, 0);
+  ellipse(mouseX*1.1, mouseY*1.8, SWH1, SWH1);
+  ellipse(mouseX*1.3, mouseY*2.5, SWH2, SWH2);
+  ellipse(mouseX*2.3, mouseY*1.5, SWH3, SWH3);
+  ellipse(mouseX/1.1, mouseY/1.8, SWH1, SWH1);
+  ellipse(mouseX/1.3, mouseY/2.5, SWH2, SWH2);
+  ellipse(mouseX/2.3, mouseY/1.5, SWH3, SWH3);
+  
+  //glow
+  fill(200, 130, 10, 20);
+  ellipse(0, 0, (frameCount % 500)*2, (frameCount % 500)*2);
+  ellipse(0, 0, (frameCount % 500)*4, (frameCount % 500)*4);
+  ellipse(0, 0, (frameCount % 500)*8, (frameCount % 500)*8);
+  ellipse(0, 0, (frameCount % 500)*16, (frameCount % 500)*16);
+  ellipse(0, 0, (frameCount % 500)*24, (frameCount % 500)*24);
+  
+  //sun
+  fill(200, 130, 10);
+  ellipse(0, 0, 0.1, 0.1);
+  fill(250, 200, 0);
+  ellipse(0, 0, 0.1 , 0.1 );
+    
+    console.log('sensorData =', sensorData);
+    console.log('sensorData.euler =', sensorData.euler);
+    if (sensorData.euler!= undefined){
+    console.log('sensorData.euler[0] = ',sensorData.euler[0]);
+    console.log('sensorData.euler[1] = ',sensorData.euler[1]);
+    console.log('sensorData.euler[2] = ',sensorData.euler[2]);}
+
     const currentTime = +new Date();
 
-    background(200, 200, 212);
+    // background(200, 200, 212);
     noStroke();
     lights();
-    orbitControl();
+    // directionalLight(226, 192, 141, 0, 0, 0); //test
+    let dirY = (mouseY / height - 0.5) *2;
+    let dirX = (mouseX / width - 0.5) *2;
+    directionalLight(250, 250, 250, dirX, -dirY, 0.25);
+    ambientMaterial(250);
+    //test above
+    // orbitControl();
+    
+
+    console.log('sensorData =', sensorData.euler);
+    if (sensorData.euler!= undefined){ //hightlight
+    normalMaterial();
+    push();  
+    translate(-sin(sensorData.euler[2]*Math.PI/180)*200,-sin(sensorData.euler[1]*Math.PI/180)*200,cos(sensorData.euler[0]*Math.PI/180)*400);
+    fill(240,161,168);
+    // rotateZ(frameCount * 0.01);
+    rotateX(frameCount * 0.01);
+    rotateY(frameCount * 0.01);
+    if (frameCount>1200 && frameCount<2000 ){
+    texture(img); }
+    else if(frameCount>2000){
+        texture(img2);
+    }
+    plane(100);
+    pop();
+
+}
+    
+    
+
 
     const models = Object.values(devices);
     // apply the physics simulation just to the models that have recent sensor data
     updatePhysics(
         models.filter(({ receivedAt }) => currentTime - receivedAt < 500)
     );
-
+    
+    
     models.forEach((data) => {
         push();
         // Place the object in world coordinates

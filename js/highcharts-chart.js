@@ -38,6 +38,7 @@ onSensorData(
     throttled(({ deviceId, data }) => {
         // const [a0, a1, a2] = data.accelerometer
         const [e0, e1, e2] = data.euler
+        // console.log(e0,e1,e2)
         const values = { e0, e1, e2 }
         const timestamp = new Date().getTime()
         Object.keys(values).forEach((k) => {

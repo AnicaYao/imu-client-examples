@@ -36,6 +36,8 @@ function setup() {
 }
 
 function draw() {
+    console.log(sensorData);
+
     background('white');
     noStroke();
 
